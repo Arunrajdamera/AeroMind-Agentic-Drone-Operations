@@ -25,6 +25,7 @@ class AgentState(TypedDict, total=False):
     mission_context: object
     drone_context: object
     telemetry_context: object
+    perception_image: bytes | None
     mission_plan: MissionPlan
     perception_result: PerceptionResult
     risk_assessment: RiskAssessment
