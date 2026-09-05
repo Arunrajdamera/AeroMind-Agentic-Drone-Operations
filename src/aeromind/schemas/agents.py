@@ -62,9 +62,24 @@ class KnowledgeResult(DomainModel):
     retrieved_chunks: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class EvidenceAssessment(DomainModel):
+    """Safe, deterministic metadata about retrieved knowledge and memory evidence."""
+
+    knowledge_available: bool = False
+    knowledge_confidence: float = Field(default=0.0, ge=0, le=1)
+    memory_count: int = Field(default=0, ge=0)
+    memory_confidence: float = Field(default=0.0, ge=0, le=1)
+    evidence_strength: float = Field(default=0.0, ge=0, le=1)
+    conflicting_evidence: bool = False
+    evidence_summary: str = Field(
+        default="No retrieved operational evidence is available.", max_length=500
+    )
+
+
 class DecisionResult(DomainModel):
     decision: RecommendedAction
     confidence: float = Field(ge=0, le=1)
     actions: list[str]
     requires_approval: bool
     reason_summary: str
+    evidence_assessment: EvidenceAssessment | None = None

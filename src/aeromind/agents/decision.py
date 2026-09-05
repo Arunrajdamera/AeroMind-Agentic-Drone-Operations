@@ -1,4 +1,4 @@
-from aeromind.schemas.agents import DecisionResult, RecommendedAction
+from aeromind.schemas.agents import DecisionResult, EvidenceAssessment, RecommendedAction
 
 
 class DecisionAgent:
@@ -6,7 +6,7 @@ class DecisionAgent:
         risk = state["risk_assessment"]
         perception = state["perception_result"]
         knowledge = state["knowledge_result"]
-        memory_context = state.get("memory_context", [])
+        evidence = state.get("evidence_assessment") or EvidenceAssessment()
         decision = (
             RecommendedAction.REQUEST_HUMAN_APPROVAL
             if risk.requires_human_approval
@@ -17,13 +17,18 @@ class DecisionAgent:
         return {
             "decision": DecisionResult(
                 decision=decision,
-                confidence=min(0.95, 0.5 + perception.confidence / 2),
+                confidence=min(
+                    0.95,
+                    max(0.0, 0.5 + perception.confidence / 2 + evidence.evidence_strength * 0.05),
+                ),
                 actions=[decision.value],
                 requires_approval=decision == RecommendedAction.REQUEST_HUMAN_APPROVAL,
                 reason_summary=(
                     "Recommendation combines perception, risk, and policy; "
-                    f"{len(memory_context)} prior memory records were contextual evidence only."
+                    f"{evidence.memory_count} prior memory records were contextual evidence only. "
+                    f"{evidence.evidence_summary}"
                 ),
+                evidence_assessment=evidence,
             ),
             "tool_candidates": [],
             "execution_status": "COMPLETED",
