@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from aeromind.api.handlers import (
@@ -30,6 +31,14 @@ def create_app() -> FastAPI:
         title="AeroMind",
         version="0.1.0",
         description="Simulation-only agentic AI platform for drone mission operations.",
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173", "http://localhost:5174"],
+        allow_credentials=False,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
     )
 
     app.add_exception_handler(RequestValidationError, request_validation_exception_handler)

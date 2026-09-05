@@ -70,7 +70,13 @@ class DroneSimulator:
         )
 
     def generate_event(self, scenario: EventType, drone_id: str | None = None) -> object:
-        event_id = f"SIM-{scenario.value}-{self.random.randint(1000, 9999)}"
+        for _ in range(100):
+            event_id = f"SIM-{scenario.value}-{self.random.randint(1000, 9999)}"
+            if self.events.repo.get_by_id(event_id) is None:
+                break
+        else:
+            raise RuntimeError("unable to generate a unique simulation event ID")
+
         drone = self.drones.get(drone_id) if drone_id else None
         metadata = {
             "simulated": True,
