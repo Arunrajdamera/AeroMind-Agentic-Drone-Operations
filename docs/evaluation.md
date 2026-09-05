@@ -36,7 +36,25 @@ report = runner.run_suite()
 
 `EvaluationSuiteResult` contains the individual `scenario_results` plus total, passed, and failed scenario counts; total and average elapsed milliseconds; approval-required and approval-created counts; the typed fail-closed scenario count; and the typed safety-bypass-prevention count. Metrics are derived only from structured scenario definitions and structured execution outcomes, never from logs or natural-language reasoning.
 
-This report is simulation-only regression and integration evaluation, not a model-quality benchmark. It does not record prompts, hidden reasoning, VLM descriptions, document or memory content, embeddings, credentials, or secrets.
+## Report Export
+
+Use the report exporter to produce a stable, machine-readable JSON representation or a concise summary:
+
+```python
+from aeromind.evaluation import export_suite_json, format_suite_summary
+
+runner = EvaluationRunner(session)
+report = runner.run_suite()
+
+json_text = export_suite_json(report)
+summary = format_suite_summary(report)
+```
+
+The JSON report uses a stable field order and indentation. It contains only typed totals, latency measurements, safety coverage counts, and allowlisted per-scenario decision, risk, approval, tool, execution, and assertion-status fields. Latency is measurement data and is not expected to be deterministic between independent runs.
+
+No CLI is provided in this phase: the reusable exporter avoids duplicating the test-only SQLite session setup or adding a second application bootstrapping path.
+
+This report is simulation-only regression and integration evaluation, not a model-quality benchmark. It does not record prompts, hidden reasoning, LLM responses, VLM descriptions, images, document or memory content, embeddings, tool arguments, credentials, environment details, or secrets.
 
 ## Scope
 
