@@ -433,6 +433,8 @@ def test_workflow_executes_memory_retrieval_and_decision_receives_context() -> N
         )
     )
     assert result["memory_context"] and result["memory_context"][0].memory_id == memory.id
+    assert result["evidence_assessment"].memory_count == 1
+    assert result["decision"].evidence_assessment == result["evidence_assessment"]
     assert "prior memory records" in result["decision"].reason_summary
 
 

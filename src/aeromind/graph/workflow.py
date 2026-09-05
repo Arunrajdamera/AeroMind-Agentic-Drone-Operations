@@ -2,6 +2,7 @@ from langgraph.graph import END, START, StateGraph
 from sqlalchemy.orm import Session
 
 from aeromind.agents.decision import DecisionAgent
+from aeromind.agents.evidence import EvidenceAssessmentAgent
 from aeromind.agents.knowledge import KnowledgeAgent
 from aeromind.agents.memory import MemoryRecordingAgent, MemoryRetrievalAgent
 from aeromind.agents.mission_planner import MissionPlannerAgent
@@ -29,6 +30,7 @@ def build_workflow(session: Session):
         "memory_retrieval",
         MemoryRetrievalAgent(MemoryService(session, provider=embedding_provider)).run,
     )
+    graph.add_node("evidence_assessment", EvidenceAssessmentAgent().run)
     graph.add_node("decision", DecisionAgent().run)
     graph.add_node("tool_planner", ToolPlanner().run)
     graph.add_node("tool_executor", GraphToolExecutor(session).run)
@@ -41,7 +43,8 @@ def build_workflow(session: Session):
     graph.add_edge("perception", "risk")
     graph.add_edge("risk", "knowledge")
     graph.add_edge("knowledge", "memory_retrieval")
-    graph.add_edge("memory_retrieval", "decision")
+    graph.add_edge("memory_retrieval", "evidence_assessment")
+    graph.add_edge("evidence_assessment", "decision")
     graph.add_edge("decision", "tool_planner")
     graph.add_edge("tool_planner", "tool_executor")
     graph.add_edge("tool_executor", "memory_recording")

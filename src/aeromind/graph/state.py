@@ -5,6 +5,7 @@ from uuid import UUID
 
 from aeromind.schemas.agents import (
     DecisionResult,
+    EvidenceAssessment,
     KnowledgeResult,
     MissionPlan,
     PerceptionResult,
@@ -29,6 +30,7 @@ class AgentState(TypedDict, total=False):
     risk_assessment: RiskAssessment
     knowledge_result: KnowledgeResult
     memory_context: list[MemoryEvidence]
+    evidence_assessment: EvidenceAssessment
     recorded_memory_ids: list[str]
     decision: DecisionResult
     tool_candidates: list[str]
