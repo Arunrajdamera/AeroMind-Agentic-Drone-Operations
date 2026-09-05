@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     embedding_model_name: str = "mock-embedding-v1"
     embedding_api_key: SecretStr | None = None
     embedding_base_url: str | None = None
+    vlm_provider: Literal["mock", "openai_compatible"] = "mock"
+    vlm_model_name: str = "mock-vlm"
+    vlm_api_key: SecretStr | None = None
+    vlm_base_url: str | None = None
     knowledge_chunk_size: int = Field(default=800, ge=100, le=10_000)
     knowledge_chunk_overlap: int = Field(default=100, ge=0, le=2_000)
     knowledge_max_document_chars: int = Field(default=100_000, ge=1_000, le=1_000_000)
