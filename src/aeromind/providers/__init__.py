@@ -11,11 +11,13 @@ from aeromind.providers.mock import (
     MockVLMProvider,
     MockWeatherProvider,
 )
-from aeromind.providers.resolver import resolve_embedding_provider
+from aeromind.providers.resolver import resolve_embedding_provider, resolve_vlm_provider
+from aeromind.providers.vlm import OpenAICompatibleVLMProvider
 
 __all__ = [
     "EmbeddingProvider",
     "OpenAICompatibleEmbeddingProvider",
+    "OpenAICompatibleVLMProvider",
     "LLMProvider",
     "MockEmbeddingProvider",
     "MockLLMProvider",
@@ -24,4 +26,5 @@ __all__ = [
     "VLMProvider",
     "WeatherProvider",
     "resolve_embedding_provider",
+    "resolve_vlm_provider",
 ]
