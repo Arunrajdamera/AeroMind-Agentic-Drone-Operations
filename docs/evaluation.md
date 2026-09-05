@@ -56,6 +56,12 @@ No CLI is provided in this phase: the reusable exporter avoids duplicating the t
 
 This report is simulation-only regression and integration evaluation, not a model-quality benchmark. It does not record prompts, hidden reasoning, LLM responses, VLM descriptions, images, document or memory content, embeddings, tool arguments, credentials, environment details, or secrets.
 
+## Safety Regression Gates
+
+The deterministic regression suite protects critical simulation-only boundaries: critical human approval, approval-before-action, fail-closed unknown and malformed tools, evidence that cannot bypass safety, no-tool routing for `CONTINUE`, valid low-risk execution, approval rejection, and decision-factor auditability.
+
+These gates assert persisted approval, tool-execution, and simulated-drone state rather than logs or natural-language explanations. The regression suite is designed to detect safety-boundary regressions; it is not a formal safety certification.
+
 ## Scope
 
 These are deterministic integration/regression evaluations. They validate workflow contracts and safety behavior; they are not future model-quality, benchmark, fairness, or real-world flight evaluations. No prompts, hidden reasoning, VLM descriptions, document or memory content, embeddings, or secrets are recorded in evaluation results.
