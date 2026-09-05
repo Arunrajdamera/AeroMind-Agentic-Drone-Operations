@@ -6,4 +6,8 @@ The Perception Agent combines normalized simulated event metadata with advisory 
 
 **VLM perception is advisory evidence. Deterministic risk and safety controls remain authoritative.** VLM output cannot create, authorize, or execute tools, or bypass human approval.
 
+## Deterministic, Auditable Decisions
+
+The Decision Agent applies deterministic precedence and records a typed `DecisionFactors` snapshot containing only bounded risk, perception, knowledge, and evidence metadata plus the selected precedence source. It does not store prompts, raw model output, retrieved content, images, embeddings, or hidden chain-of-thought. LLM/VLM output remains advisory evidence; Safety Policy and the Approval Gate remain authoritative for tool execution.
+
 Agents transform data and recommend actions only. They do not execute tools, mutate mission state, or control hardware. Deterministic risk rules remain distinct from model assistance.

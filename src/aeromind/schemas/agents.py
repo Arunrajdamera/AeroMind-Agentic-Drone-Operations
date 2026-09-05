@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field
 
@@ -76,6 +76,24 @@ class EvidenceAssessment(DomainModel):
     )
 
 
+class DecisionFactors(DomainModel):
+    """Concise, safe inputs used by the deterministic decision precedence."""
+
+    risk_level: RiskLevel
+    risk_score: float = Field(ge=0, le=100)
+    perception_confidence: float = Field(ge=0, le=1)
+    restricted_zone: bool
+    requires_investigation: bool
+    knowledge_relevant: bool
+    knowledge_confidence: float = Field(ge=0, le=1)
+    evidence_strength: float = Field(ge=0, le=1)
+    conflicting_evidence: bool
+    human_approval_required: bool
+    recommended_action_source: Literal[
+        "risk_human_approval", "knowledge_or_restricted_zone", "risk_recommended_action"
+    ]
+
+
 class DecisionResult(DomainModel):
     decision: RecommendedAction
     confidence: float = Field(ge=0, le=1)
@@ -83,3 +101,4 @@ class DecisionResult(DomainModel):
     requires_approval: bool
     reason_summary: str
     evidence_assessment: EvidenceAssessment | None = None
+    decision_factors: DecisionFactors | None = None
