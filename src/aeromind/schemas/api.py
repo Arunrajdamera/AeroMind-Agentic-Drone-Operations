@@ -21,6 +21,18 @@ class ApiModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ApiValidationIssue(ApiModel):
+    location: list[str | int] = Field(default_factory=list)
+    type: str
+    message: str
+
+
+class ApiErrorResponse(ApiModel):
+    code: str
+    message: str
+    details: list[ApiValidationIssue] = Field(default_factory=list)
+
+
 class DroneCreate(ApiModel):
     drone_id: str
     name: str
