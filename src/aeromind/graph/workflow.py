@@ -174,7 +174,7 @@ def route_after_decision(state: AgentState) -> str:
     return "no_tool_path"
 
 
-def build_workflow(session: Session):
+def build_workflow(session: Session, *, decision_agent: DecisionAgent | None = None):
     embedding_provider = resolve_embedding_provider()
     vlm_provider = resolve_vlm_provider()
     graph = StateGraph(AgentState)
@@ -204,7 +204,9 @@ def build_workflow(session: Session):
         "evidence_assessment",
         instrument_agent_node("evidence_assessment", EvidenceAssessmentAgent().run),
     )
-    graph.add_node("decision", instrument_agent_node("decision", DecisionAgent().run))
+    graph.add_node(
+        "decision", instrument_agent_node("decision", (decision_agent or DecisionAgent()).run)
+    )
     graph.add_node("tool_planner", instrument_agent_node("tool_planner", ToolPlanner().run))
     graph.add_node(
         "tool_executor", instrument_agent_node("tool_executor", GraphToolExecutor(session).run)
