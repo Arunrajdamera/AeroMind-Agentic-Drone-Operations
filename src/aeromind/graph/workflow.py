@@ -11,16 +11,17 @@ from aeromind.agents.risk import RiskAgent
 from aeromind.agents.tool_executor import GraphToolExecutor
 from aeromind.agents.tool_planner import ToolPlanner
 from aeromind.graph.state import AgentState
-from aeromind.providers.resolver import resolve_embedding_provider
+from aeromind.providers.resolver import resolve_embedding_provider, resolve_vlm_provider
 from aeromind.services.knowledge import KnowledgeService
 from aeromind.services.memory import MemoryService
 
 
 def build_workflow(session: Session):
     embedding_provider = resolve_embedding_provider()
+    vlm_provider = resolve_vlm_provider()
     graph = StateGraph(AgentState)
     graph.add_node("mission_planner", MissionPlannerAgent(session).run)
-    graph.add_node("perception", PerceptionAgent().run)
+    graph.add_node("perception", PerceptionAgent(vlm_provider).run)
     graph.add_node("risk", RiskAgent().run)
     graph.add_node(
         "knowledge",
