@@ -1,0 +1,2 @@
+# Base runtime dependencies. For development: pip install -e ".[dev]"
+-e .
