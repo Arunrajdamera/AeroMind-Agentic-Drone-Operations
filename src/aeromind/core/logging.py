@@ -18,7 +18,10 @@ class JsonFormatter(logging.Formatter):
         }
         for field in (
             "request_id",
+            "run_id",
+            "agent_run_id",
             "mission_id",
+            "drone_id",
             "agent_name",
             "tool_name",
             "duration_ms",
@@ -33,6 +36,9 @@ class JsonFormatter(logging.Formatter):
             "error_type",
             "outcome_category",
             "memory_created",
+            "node_name",
+            "status",
+            "outcome",
         ):
             value = getattr(record, field, None)
             if value is not None:
