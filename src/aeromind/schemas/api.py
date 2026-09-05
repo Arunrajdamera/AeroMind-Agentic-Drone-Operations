@@ -14,6 +14,7 @@ from aeromind.models.domain import (
     Priority,
     Severity,
 )
+from aeromind.schemas.agents import DecisionFactors, RecommendedAction, RiskLevel
 
 
 class ApiModel(BaseModel):
@@ -95,3 +96,103 @@ class EventRead(EventCreate):
 class TelemetryHealth(ApiModel):
     healthy: bool
     warnings: list[str]
+
+
+class AgentRunRequest(ApiModel):
+    event_id: str
+    mission_id: str | None = None
+    drone_id: str | None = None
+    execute_tools: bool = False
+
+
+class MissionPlanMetadata(ApiModel):
+    selected_drone_id: str | None = None
+    mission_type: str
+    priority: str
+    planned_action: RecommendedAction
+    constraint_count: int = Field(ge=0)
+
+
+class PerceptionMetadata(ApiModel):
+    event_type: str
+    object_type: str
+    confidence: float = Field(ge=0, le=1)
+    severity: str
+    restricted_zone: bool
+    requires_investigation: bool
+
+
+class RiskAssessmentMetadata(ApiModel):
+    risk_level: RiskLevel
+    risk_score: float = Field(ge=0, le=100)
+    recommended_action: RecommendedAction
+    requires_human_approval: bool
+
+
+class KnowledgeMetadata(ApiModel):
+    relevant: bool
+    confidence: float = Field(ge=0, le=1)
+    source_count: int = Field(ge=0)
+
+
+class DecisionMetadata(ApiModel):
+    decision: RecommendedAction
+    confidence: float = Field(ge=0, le=1)
+    actions: list[str] = Field(default_factory=list)
+    requires_approval: bool
+    decision_factors: DecisionFactors | None = None
+
+
+class ToolRequestMetadata(ApiModel):
+    name: str
+
+
+class ToolExecutionMetadata(ApiModel):
+    tool_name: str
+    status: str
+
+
+class AgentRunResponse(ApiModel):
+    run_id: str
+    decision: DecisionMetadata | None = None
+    risk_assessment: RiskAssessmentMetadata | None = None
+    mission_plan: MissionPlanMetadata | None = None
+    perception: PerceptionMetadata | None = None
+    knowledge: KnowledgeMetadata | None = None
+    memory_count: int = Field(ge=0)
+    recorded_memory_ids: list[str] = Field(default_factory=list)
+    warning_count: int = Field(ge=0)
+    tool_requests: list[ToolRequestMetadata] = Field(default_factory=list)
+    tool_results: list[ToolExecutionMetadata] = Field(default_factory=list)
+    error_types: list[str] = Field(default_factory=list)
+    execution_status: str
+
+
+class AgentRunRead(ApiModel):
+    run_id: str
+    status: str
+    execution_status: str
+    final_decision: str | None = None
+    error_type: str | None = None
+    requested_tool_names: list[str] = Field(default_factory=list)
+    requested_tool_count: int = Field(ge=0)
+
+
+class AgentToolExecutionRead(ApiModel):
+    tool_name: str
+    status: str
+
+
+class ApprovalRead(ApiModel):
+    approval_id: str
+    status: str
+    tool_name: str | None = None
+
+
+class ApprovalExecutionMetadata(ApiModel):
+    tool_name: str
+    status: str
+
+
+class ApprovalActionRead(ApprovalRead):
+    execution: ApprovalExecutionMetadata | None = None
