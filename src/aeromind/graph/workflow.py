@@ -12,8 +12,26 @@ from aeromind.agents.tool_executor import GraphToolExecutor
 from aeromind.agents.tool_planner import ToolPlanner
 from aeromind.graph.state import AgentState
 from aeromind.providers.resolver import resolve_embedding_provider, resolve_vlm_provider
+from aeromind.schemas.agents import RecommendedAction
 from aeromind.services.knowledge import KnowledgeService
 from aeromind.services.memory import MemoryService
+
+TOOL_PRODUCING_DECISIONS = frozenset(
+    {
+        RecommendedAction.INVESTIGATE,
+        RecommendedAction.RAISE_ALERT,
+        RecommendedAction.REQUEST_HUMAN_APPROVAL,
+        RecommendedAction.RETURN_TO_HOME,
+    }
+)
+
+
+def route_after_decision(state: AgentState) -> str:
+    """Route only typed tool-producing decisions to the authoritative executor path."""
+    decision = state.get("decision")
+    if decision and decision.decision in TOOL_PRODUCING_DECISIONS:
+        return "tool_path"
+    return "no_tool_path"
 
 
 def build_workflow(session: Session):
@@ -46,7 +64,11 @@ def build_workflow(session: Session):
     graph.add_edge("knowledge", "memory_retrieval")
     graph.add_edge("memory_retrieval", "evidence_assessment")
     graph.add_edge("evidence_assessment", "decision")
-    graph.add_edge("decision", "tool_planner")
+    graph.add_conditional_edges(
+        "decision",
+        route_after_decision,
+        {"tool_path": "tool_planner", "no_tool_path": "memory_recording"},
+    )
     graph.add_edge("tool_planner", "tool_executor")
     graph.add_edge("tool_executor", "memory_recording")
     graph.add_edge("memory_recording", END)
