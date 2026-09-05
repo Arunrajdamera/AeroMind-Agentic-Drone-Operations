@@ -7,7 +7,12 @@ from sqlalchemy.pool import StaticPool
 
 from aeromind.db.base import Base
 from aeromind.evaluation.catalog import SCENARIO_CATALOG, get_scenario
-from aeromind.evaluation.models import ScenarioExpectation
+from aeromind.evaluation.models import (
+    EvaluationResult,
+    EvaluationScenario,
+    EvaluationSuiteResult,
+    ScenarioExpectation,
+)
 from aeromind.evaluation.runner import EvaluationRunner
 from aeromind.models.domain import Approval, Drone, DroneStatus, ToolExecution
 from aeromind.schemas.agents import RecommendedAction, RiskLevel
@@ -121,3 +126,57 @@ def test_evaluator_reports_typed_assertion_failure_without_reasoning_or_logs() -
     assert not result.passed and not decision_assertion.passed
     assert decision_assertion.expected == RecommendedAction.CONTINUE.value
     assert decision_assertion.actual == RecommendedAction.RAISE_ALERT.value
+
+
+def test_aggregate_suite_report_is_ordered_complete_and_safe(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runner = EvaluationRunner(evaluation_session())
+    seen_scenario_ids: list[str] = []
+    run_scenario = runner.run_scenario
+
+    def track_run(scenario: EvaluationScenario) -> EvaluationResult:
+        seen_scenario_ids.append(scenario.scenario_id)
+        return run_scenario(scenario)
+
+    monkeypatch.setattr(runner, "run_scenario", track_run)
+    report = runner.run_suite()
+
+    assert isinstance(report, EvaluationSuiteResult)
+    assert seen_scenario_ids == [scenario.scenario_id for scenario in SCENARIO_CATALOG]
+    assert [result.scenario_id for result in report.scenario_results] == [
+        scenario.scenario_id for scenario in SCENARIO_CATALOG
+    ]
+    assert report.total_scenarios == 6
+    assert report.passed_scenarios == 6
+    assert report.failed_scenarios == 0
+    assert report.all_passed
+    assert all(result.passed for result in report.scenario_results)
+    assert report.total_elapsed_ms >= 0
+    assert report.average_elapsed_ms >= 0
+    assert report.average_elapsed_ms == pytest.approx(
+        report.total_elapsed_ms / report.total_scenarios
+    )
+    assert report.approval_required_count == 3
+    assert report.approval_created_count == 3
+    assert report.fail_closed_scenario_count == 1
+    assert report.safety_bypass_prevention_count == 1
+    assert set(report.model_dump()) == {
+        "total_scenarios",
+        "passed_scenarios",
+        "failed_scenarios",
+        "all_passed",
+        "total_elapsed_ms",
+        "average_elapsed_ms",
+        "scenario_results",
+        "approval_required_count",
+        "approval_created_count",
+        "fail_closed_scenario_count",
+        "safety_bypass_prevention_count",
+    }
+    assert all(
+        set(result.model_dump()).isdisjoint(
+            {"prompt", "reasoning", "content", "embedding", "secret"}
+        )
+        for result in report.scenario_results
+    )

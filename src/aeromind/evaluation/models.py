@@ -58,7 +58,24 @@ class EvaluationResult(DomainModel):
     actual_risk_level: RiskLevel | None = None
     expected_approval_required: bool | None = None
     actual_approval_required: bool | None = None
+    actual_approval_created: bool | None = None
     expected_tools: list[str] = Field(default_factory=list)
     actual_tools: list[str] = Field(default_factory=list)
     final_execution_status: str | None = None
     elapsed_ms: float = Field(ge=0)
+
+
+class EvaluationSuiteResult(DomainModel):
+    """Aggregate of deterministic scenario outcomes without sensitive artifacts."""
+
+    total_scenarios: int = Field(ge=0)
+    passed_scenarios: int = Field(ge=0)
+    failed_scenarios: int = Field(ge=0)
+    all_passed: bool
+    total_elapsed_ms: float = Field(ge=0)
+    average_elapsed_ms: float = Field(ge=0)
+    scenario_results: list[EvaluationResult] = Field(default_factory=list)
+    approval_required_count: int = Field(ge=0)
+    approval_created_count: int = Field(ge=0)
+    fail_closed_scenario_count: int = Field(ge=0)
+    safety_bypass_prevention_count: int = Field(ge=0)

@@ -10,6 +10,7 @@ from aeromind.evaluation.models import (
     EvaluationAssertion,
     EvaluationResult,
     EvaluationScenario,
+    EvaluationSuiteResult,
     ScenarioKind,
 )
 from aeromind.graph.workflow import build_workflow
@@ -27,13 +28,13 @@ from aeromind.models.domain import (
     MissionStatus,
     MissionType,
 )
-from aeromind.schemas.agents import DecisionResult
+from aeromind.schemas.agents import DecisionResult, RecommendedAction
 from aeromind.schemas.knowledge import DocumentIngestRequest
 from aeromind.schemas.memory import MemoryCreate
 from aeromind.services.approvals import ApprovalService
 from aeromind.services.knowledge import KnowledgeService
 from aeromind.services.memory import MemoryService
-from aeromind.tools.definitions import ToolCall
+from aeromind.tools.definitions import ToolCall, ToolStatus
 from aeromind.tools.executor import ToolExecutor
 
 
@@ -43,7 +44,7 @@ class EvaluationRunner:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def run(self, scenario: EvaluationScenario) -> EvaluationResult:
+    def run_scenario(self, scenario: EvaluationScenario) -> EvaluationResult:
         started = perf_counter()
         if scenario.kind == ScenarioKind.TOOL_EXECUTOR:
             actual = self._run_unknown_tool(scenario)
@@ -60,10 +61,50 @@ class EvaluationRunner:
             actual_risk_level=actual.get("risk_level"),
             expected_approval_required=scenario.expected.approval_required,
             actual_approval_required=actual.get("approval_required"),
+            actual_approval_created=actual.get("approval_created"),
             expected_tools=scenario.expected.tools,
             actual_tools=actual["tools"],
             final_execution_status=actual.get("execution_status"),
             elapsed_ms=round(max(0.0, (perf_counter() - started) * 1000), 3),
+        )
+
+    def run(self, scenario: EvaluationScenario) -> EvaluationResult:
+        """Backward-compatible alias for running one deterministic scenario."""
+        return self.run_scenario(scenario)
+
+    def run_suite(self) -> EvaluationSuiteResult:
+        """Run the stable catalog once in its declared deterministic order."""
+        from aeromind.evaluation.catalog import SCENARIO_CATALOG
+
+        scenario_results = [self.run_scenario(scenario) for scenario in SCENARIO_CATALOG]
+        total_scenarios = len(scenario_results)
+        passed_scenarios = sum(result.passed for result in scenario_results)
+        total_elapsed_ms = round(sum(result.elapsed_ms for result in scenario_results), 3)
+        return EvaluationSuiteResult(
+            total_scenarios=total_scenarios,
+            passed_scenarios=passed_scenarios,
+            failed_scenarios=total_scenarios - passed_scenarios,
+            all_passed=passed_scenarios == total_scenarios,
+            total_elapsed_ms=total_elapsed_ms,
+            average_elapsed_ms=(total_elapsed_ms / total_scenarios if total_scenarios else 0.0),
+            scenario_results=scenario_results,
+            approval_required_count=sum(
+                result.actual_approval_required is True for result in scenario_results
+            ),
+            approval_created_count=sum(
+                result.actual_approval_created is True for result in scenario_results
+            ),
+            fail_closed_scenario_count=sum(
+                scenario.kind == ScenarioKind.TOOL_EXECUTOR
+                and result.final_execution_status == ToolStatus.BLOCKED.value
+                for scenario, result in zip(SCENARIO_CATALOG, scenario_results, strict=True)
+            ),
+            safety_bypass_prevention_count=sum(
+                scenario.seed_strong_evidence
+                and result.actual_decision == RecommendedAction.REQUEST_HUMAN_APPROVAL
+                and result.actual_approval_required is True
+                for scenario, result in zip(SCENARIO_CATALOG, scenario_results, strict=True)
+            ),
         )
 
     def _run_unknown_tool(self, scenario: EvaluationScenario) -> dict:

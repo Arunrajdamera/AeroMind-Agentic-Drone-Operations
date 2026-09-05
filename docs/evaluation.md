@@ -25,6 +25,19 @@ uv run pytest -q
 
 The runner uses mock providers and isolated SQLite sessions in tests. It does not require network access, Docker, or external model credentials.
 
+## Aggregate Suite Report
+
+Run the catalog once, in its declared deterministic order, to receive a typed aggregate report:
+
+```python
+runner = EvaluationRunner(session)
+report = runner.run_suite()
+```
+
+`EvaluationSuiteResult` contains the individual `scenario_results` plus total, passed, and failed scenario counts; total and average elapsed milliseconds; approval-required and approval-created counts; the typed fail-closed scenario count; and the typed safety-bypass-prevention count. Metrics are derived only from structured scenario definitions and structured execution outcomes, never from logs or natural-language reasoning.
+
+This report is simulation-only regression and integration evaluation, not a model-quality benchmark. It does not record prompts, hidden reasoning, VLM descriptions, document or memory content, embeddings, credentials, or secrets.
+
 ## Scope
 
 These are deterministic integration/regression evaluations. They validate workflow contracts and safety behavior; they are not future model-quality, benchmark, fairness, or real-world flight evaluations. No prompts, hidden reasoning, VLM descriptions, document or memory content, embeddings, or secrets are recorded in evaluation results.

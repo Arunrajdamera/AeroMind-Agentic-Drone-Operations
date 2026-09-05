@@ -110,4 +110,3 @@ def get_scenario(scenario_id: str) -> EvaluationScenario:
         if scenario.scenario_id == scenario_id:
             return scenario
     raise KeyError(f"Unknown evaluation scenario: {scenario_id}")
-
