@@ -10,4 +10,8 @@ The Perception Agent combines normalized simulated event metadata with advisory 
 
 The Decision Agent applies deterministic precedence and records a typed `DecisionFactors` snapshot containing only bounded risk, perception, knowledge, and evidence metadata plus the selected precedence source. It does not store prompts, raw model output, retrieved content, images, embeddings, or hidden chain-of-thought. LLM/VLM output remains advisory evidence; Safety Policy and the Approval Gate remain authoritative for tool execution.
 
+## Decision-Aware Routing
+
+LangGraph routes only `INVESTIGATE`, `RAISE_ALERT`, `RETURN_TO_HOME`, and `REQUEST_HUMAN_APPROVAL` decisions to ToolPlanner and ToolExecutor. Other decisions bypass tool planning and execution and proceed directly to memory recording. The existing ToolExecutor, Safety Policy, and Approval Gate remain authoritative; `REQUEST_HUMAN_APPROVAL` still enters the established approval-gated `return_to_home` path.
+
 Agents transform data and recommend actions only. They do not execute tools, mutate mission state, or control hardware. Deterministic risk rules remain distinct from model assistance.
