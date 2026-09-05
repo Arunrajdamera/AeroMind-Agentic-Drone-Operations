@@ -1,4 +1,4 @@
-from aeromind.schemas.agents import RecommendedAction, RiskAssessment, RiskLevel
+from aeromind.schemas.agents import PerceptionResult, RecommendedAction, RiskAssessment, RiskLevel
 
 
 class RiskAgent:
@@ -21,6 +21,12 @@ class RiskAgent:
             if drone.health_status.value != "HEALTHY":
                 score += 20
                 factors.append("drone health degraded")
+        perception = state.get("perception_result")
+        perception_adjustment = 0.0
+        if isinstance(perception, PerceptionResult) and perception.requires_investigation:
+            perception_adjustment = min(10.0, perception.confidence * 10.0)
+            score += perception_adjustment
+            factors.append(f"bounded perception corroboration: +{perception_adjustment:.1f}")
         score = min(100, score)
         level = (
             RiskLevel.CRITICAL
@@ -45,6 +51,11 @@ class RiskAgent:
                 risk_factors=factors,
                 recommended_action=action,
                 requires_human_approval=level == RiskLevel.CRITICAL,
-                reason_summary="Deterministic safety-oriented risk calculation.",
+                reason_summary=(
+                    "Deterministic safety-oriented risk calculation."
+                    if perception_adjustment == 0
+                    else "Deterministic safety-oriented risk calculation with bounded "
+                    "perception corroboration."
+                ),
             )
         }
