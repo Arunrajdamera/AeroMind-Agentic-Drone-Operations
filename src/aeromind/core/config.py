@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     environment: Literal["development", "test", "production"] = "development"
     log_level: str = "INFO"
-    cors_origins: str = "http://localhost:5173,http://localhost:5174"
+    cors_origins: str = "http://localhost:5173,http://localhost:5174,http://127.0.0.1:5174"
     mock_mode: bool = True
     database_url: str = "postgresql+psycopg://aeromind:aeromind@localhost:5432/aeromind"
     openai_api_key: SecretStr | None = None
